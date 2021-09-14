@@ -46,11 +46,12 @@ extension NSObject {
 extension UIApplication {
     static let classSwizzedMethod: Void = {
         UITableView.mc_initialize
-        
+        UICollectionView.mc_initialize
     }()
     
     open override var next: UIResponder? {
         UITableView.mc_initialize
+        UICollectionView.mc_initialize
         return super.next
     }
 }

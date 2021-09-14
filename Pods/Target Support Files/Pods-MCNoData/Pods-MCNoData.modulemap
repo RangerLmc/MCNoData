@@ -1,0 +1,6 @@
+module Pods_MCNoData {
+  umbrella header "Pods-MCNoData-umbrella.h"
+
+  export *
+  module * { export * }
+}

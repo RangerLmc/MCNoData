@@ -55,6 +55,7 @@ extension UIApplication {
     }
 }
 
+
 /// UITableView无数据协议
 protocol UITableViewNoDataDelegate: NSObjectProtocol {
     
@@ -151,4 +152,94 @@ extension UITableView {
     
 }
 
+/// UICollectionView无数据协议
+protocol UICollectionViewNoDataDelegate: NSObjectProtocol {
+    func collection(noDataViewFor collectionView: UICollectionView) -> UIView?
+}
+
+extension UICollectionView {
+    
+    // 添加存储属性
+    var noDataDelegate: UICollectionViewNoDataDelegate? {
+        get {
+            objc_getAssociatedObject(self, &NoDataDeletateKey) as? UICollectionViewNoDataDelegate
+        }
+        set {
+            objc_setAssociatedObject(self, &NoDataDeletateKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
+        }
+    }
+    
+    static let mc_initialize: Void = {
+        DispatchQueue.once(UUID().uuidString) {
+            swizzleMethod(UICollectionView.self, originSelector: #selector(UICollectionView.reloadData), swizzleSelector: #selector(UICollectionView.mc_reloadData))
+        }
+    }()
+    
+    ///
+    @objc func mc_reloadData() {
+        
+        mc_reloadData()
+        
+        guard let _ = noDataDelegate else { return }
+        
+        // 忽略第一次刷新
+//        if !isInitFinish() {
+//            mc_havingData(true)
+//            mc_setIsInitFinish(true)
+//            return
+//        }
+        
+        // 刷新完成后检测数据
+        DispatchQueue.main.async {
+            var havingData = false
+            for i in 0 ..< self.numberOfSections {
+                let row = self.numberOfItems(inSection: i)
+                if row > 0 {
+                    havingData = true
+                    break
+                }
+            }
+            self.mc_havingData(havingData)
+        }
+        
+    }
+    
+    /// 设置占位图
+    fileprivate func mc_havingData(_ isHave: Bool) {
+        
+        if isHave {
+            // 不需要占位图
+            if let view = viewWithTag(kPlaceViewTag) {
+                view.removeFromSuperview()
+            }
+            return
+        }
+        
+        // 移除之前的占位图
+        if let pView = viewWithTag(kPlaceViewTag) {
+            pView.removeFromSuperview()
+        }
+        
+        // 添加占位图
+        if let pView = noDataDelegate?.collection(noDataViewFor: self) {
+            pView.frame = self.bounds
+            pView.tag = kPlaceViewTag
+            addSubview(pView)
+        }
+        
+    }
+    
+    /// 设置加载完数据
+    fileprivate func mc_setIsInitFinish(_ finish: Bool) {
+        objc_setAssociatedObject(self, &IsInitFinish, finish, .OBJC_ASSOCIATION_ASSIGN)
+    }
+    
+    /// 是否已经加载完成数据
+    fileprivate func isInitFinish() -> Bool {
+        let obj = objc_getAssociatedObject(self, &IsInitFinish)
+        let isFinish = obj as? Bool
+        return isFinish ?? false
+    }
+    
+}
 

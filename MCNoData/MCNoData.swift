@@ -132,7 +132,7 @@ extension UITableView {
         
         // 添加占位图
         if let pView = noDataDelegate?.tableView(noDataViewFor: self) {
-            pView.frame = self.bounds
+            pView.frame = CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height)
             pView.tag = kPlaceViewTag
             addSubview(pView)
         }
@@ -223,7 +223,7 @@ extension UICollectionView {
         
         // 添加占位图
         if let pView = noDataDelegate?.collection(noDataViewFor: self) {
-            pView.frame = self.bounds
+            pView.frame = CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height)
             pView.tag = kPlaceViewTag
             addSubview(pView)
         }
